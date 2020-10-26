@@ -1,3 +1,5 @@
+import json
+
 import arrow
 
 from misc.constant.value import DEFAULT_DATETIME_FORMAT
@@ -13,3 +15,11 @@ def str_to_datetime(str_dt):
 
 def add_second_to_datetime(dt, second):
     return arrow.get(dt).shift(seconds=second).format(DEFAULT_DATETIME_FORMAT)
+
+
+def check_if_string_is_json(str_json):
+    try:
+        json.loads(str_json)
+    except ValueError as error:
+        return False
+    return True

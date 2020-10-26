@@ -16,7 +16,7 @@ def setup_route():
     return [
         web.post('/notify', service.notify),
         web.post('/forward', service.forward),
-        web.get('/', handler)
+        web.get('/start', handler)
     ]
 
 

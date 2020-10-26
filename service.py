@@ -5,7 +5,7 @@ from aiohttp import web
 
 from misc.constant.message import *
 from misc.constant.value import *
-from misc.helper.takeruHelper import str_to_datetime, add_second_to_datetime, get_current_datetime
+from misc.helper.takeruHelper import *
 
 
 class LPRMasterService:
@@ -17,13 +17,15 @@ class LPRMasterService:
         payload = await request.json()
         if not payload['data']:
             return self.return_message(message=INVALID_PAYLOAD_DATA_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
+        result = []
         for data in payload['data']:
             gate_id = data['gate_id']
             if gate_id:
                 self.check_if_default_state_exist(gate_id)
+                result.append(self.fetch_state(gate_id))
             else:
-                self.return_message(message=INVALID_GATE_ID_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
-        return self.return_message(message=OK_MESSAGE)
+                return self.return_message(message=INVALID_GATE_ID_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
+        return self.return_message(message=result)
 
     async def forward(self, payload):
         forward_url = os.getenv("FORWARD_URL", "")
@@ -64,6 +66,16 @@ class LPRMasterService:
         cursor = self.db_connection.cursor()
         cursor.execute("SELECT gate_id, modified FROM state")
         return cursor.fetchall()
+
+    def fetch_state(self, gate_id):
+        cursor = self.db_connection.cursor()
+        cursor.execute("SELECT gate_id, last_state FROM state WHERE gate_id = ?", (gate_id,))
+        result = cursor.fetchone()
+        last_state = json.loads(result[1]) if check_if_string_is_json(result[1]) else result[1]
+        return {
+            'gate_id': result[0],
+            'last_state': last_state
+        }
 
     def reset_state(self):
         print("resetting ...")

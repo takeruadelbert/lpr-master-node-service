@@ -152,3 +152,4 @@ fabric.properties
 
 *.sqlite3
 log/*.log
+environment.env

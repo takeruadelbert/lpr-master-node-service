@@ -16,7 +16,7 @@ class LPRMasterService:
     async def notify(self, request):
         payload = await request.json()
         if not payload['data']:
-            return self.return_message(message=INVALID_PAYLOAD_DATA_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
+            return self.return_message(message=INVALID_PAYLOAD_DATA_MESSAGE, status=HTTP_STATUS_NO_CONTENT)
         result = []
         for data in payload['data']:
             gate_id = data['gate_id']
@@ -27,7 +27,7 @@ class LPRMasterService:
                 return self.return_message(message=INVALID_GATE_ID_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
         return self.return_message(message=result)
 
-    async def forward(self, payload):
+    def forward(self, payload):
         forward_url = os.getenv("FORWARD_URL", "")
         if forward_url:
             return self.return_message(message=OK_MESSAGE)
@@ -78,7 +78,6 @@ class LPRMasterService:
         }
 
     def reset_state(self):
-        print("resetting ...")
         states = self.fetch_whole_state()
         if states:
             for state in states:

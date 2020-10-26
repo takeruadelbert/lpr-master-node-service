@@ -19,6 +19,26 @@ def setup_log():
     )
 
 
+def return_message(**kwargs):
+    message = kwargs.get("message", "")
+    status = kwargs.get("status", HTTP_STATUS_OK)
+    return web.json_response({'message': message}, status=status)
+
+
+async def forward(payload):
+    forward_url = os.getenv("FORWARD_URL", "")
+    if not forward_url:
+        logging.error(INVALID_FORWARD_URL_MESSAGE)
+    else:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(forward_url, json=payload) as response:
+                    print("code = ", response.status)
+                    print("data = ", await response.text())
+        except Exception as error:
+            logging.error(error)
+
+
 class LPRMasterService:
     def __init__(self):
         db_path = os.path.join(os.getcwd(), os.getenv("DB_NAME", DEFAULT_DB_FILE))
@@ -28,8 +48,8 @@ class LPRMasterService:
     async def notify(self, request):
         payload = await request.json()
         if not payload['data']:
-            return self.return_message(message=INVALID_PAYLOAD_DATA_MESSAGE, status=HTTP_STATUS_NO_CONTENT)
-        await self.forward(payload)
+            return return_message(message=INVALID_PAYLOAD_DATA_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
+        await forward(payload)
         result = []
         for data in payload['data']:
             gate_id = data['gate_id']
@@ -37,32 +57,14 @@ class LPRMasterService:
                 self.check_if_default_state_exist(gate_id)
                 result.append(self.fetch_state(gate_id))
             else:
-                return self.return_message(message=INVALID_GATE_ID_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
-        return self.return_message(message=result)
-
-    async def forward(self, payload):
-        forward_url = os.getenv("FORWARD_URL", "")
-        if not forward_url:
-            logging.error(INVALID_FORWARD_URL_MESSAGE)
-        else:
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(forward_url, json=payload) as response:
-                        print("code = ", response.status)
-                        print("data = ", await response.text())
-            except Exception as error:
-                logging.error(error)
+                return return_message(message=INVALID_GATE_ID_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
+        return return_message(message=result)
 
     async def test_update_state(self, request):
         payload = await request.json()
         updated_state = payload['state']
         gate_id = payload['gate_id']
         self.update_state(gate_id, updated_state)
-
-    def return_message(self, **kwargs):
-        message = kwargs.get("message", "")
-        status = kwargs.get("status", HTTP_STATUS_OK)
-        return web.json_response({'message': message}, status=status)
 
     def add_default_state(self, gate_id):
         self.db_connection.execute("INSERT INTO state (last_state, gate_id) VALUES (?, ?)",

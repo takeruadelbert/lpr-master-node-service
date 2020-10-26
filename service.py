@@ -1,6 +1,8 @@
+import logging
 import os
 import sqlite3
 
+import aiohttp
 from aiohttp import web
 
 from misc.constant.message import *
@@ -8,15 +10,26 @@ from misc.constant.value import *
 from misc.helper.takeruHelper import *
 
 
+def setup_log():
+    logging.basicConfig(
+        filename=os.getcwd() + '/log/' + DEFAULT_LOG_NAME,
+        level=logging.DEBUG,
+        format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+    )
+
+
 class LPRMasterService:
     def __init__(self):
         db_path = os.path.join(os.getcwd(), os.getenv("DB_NAME", DEFAULT_DB_FILE))
         self.db_connection = sqlite3.connect(db_path)
+        setup_log()
 
     async def notify(self, request):
         payload = await request.json()
         if not payload['data']:
             return self.return_message(message=INVALID_PAYLOAD_DATA_MESSAGE, status=HTTP_STATUS_NO_CONTENT)
+        await self.forward(payload)
         result = []
         for data in payload['data']:
             gate_id = data['gate_id']
@@ -27,12 +40,18 @@ class LPRMasterService:
                 return self.return_message(message=INVALID_GATE_ID_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
         return self.return_message(message=result)
 
-    def forward(self, payload):
+    async def forward(self, payload):
         forward_url = os.getenv("FORWARD_URL", "")
-        if forward_url:
-            return self.return_message(message=OK_MESSAGE)
+        if not forward_url:
+            logging.error(INVALID_FORWARD_URL_MESSAGE)
         else:
-            return self.return_message(message=INVALID_FORWARD_URL_MESSAGE, status=HTTP_STATUS_NOT_FOUND)
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(forward_url, json=payload) as response:
+                        print("code = ", response.status)
+                        print("data = ", await response.text())
+            except Exception as error:
+                logging.error(error)
 
     async def test_update_state(self, request):
         payload = await request.json()

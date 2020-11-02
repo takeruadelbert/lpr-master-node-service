@@ -39,6 +39,12 @@ async def forward(payload):
             logging.error(error)
 
 
+def setup_data_state(**kwargs):
+    status = kwargs.get("status", "Undetected")
+    data = kwargs.get("data", DEFAULT_STATE)
+    return json.dumps({'status': status, 'data': data})
+
+
 class LPRMasterService:
     def __init__(self):
         db_path = os.path.join(os.getcwd(), os.getenv("DB_NAME", DEFAULT_DB_FILE))
@@ -109,4 +115,4 @@ class LPRMasterService:
                 added_current_dt = add_second_to_datetime(current_dt, int(limit))
                 now = get_current_datetime()
                 if not added_current_dt > now:
-                    self.update_state(gate_id, DEFAULT_STATE, modified)
+                    self.update_state(gate_id, setup_data_state(), modified)

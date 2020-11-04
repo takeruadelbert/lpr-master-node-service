@@ -33,8 +33,11 @@ async def forward(payload):
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(forward_url, json=payload) as response:
-                    print("code = ", response.status)
-                    print("data = ", await response.text())
+                    message = await response.text()
+                    if response.status == HTTP_STATUS_OK:
+                        logging.info("[{}] {}".format(response.status, message))
+                    else:
+                        logging.error("[{}] {}".format(response.status, message))
         except Exception as error:
             logging.error(error)
 

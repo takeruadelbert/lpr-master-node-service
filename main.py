@@ -1,15 +1,15 @@
 import asyncio
-import json
 import os
 
 from aiohttp import web
 from aiojobs.aiohttp import setup
 
+from broker.broker import Broker
 from misc.constant.value import DEFAULT_PORT, DEFAULT_RESET_STATE_SCHEDULER_TIME
-from misc.helper.takeruHelper import get_current_datetime
 from service import LPRMasterService
 
 service = LPRMasterService()
+broker = Broker()
 
 
 def setup_route():
@@ -21,23 +21,32 @@ def setup_route():
 async def initialization():
     app = web.Application()
     asyncio.get_event_loop().create_task(scheduler_reset_state())
+    app.on_startup.append(start_background_tasks)
+    app.on_cleanup.append(cleanup_background_tasks)
     app.router.add_routes(setup_route())
     setup(app)
     return app
-
-
-def test_update_state():
-    states = service.fetch_whole_state()
-    for state in states:
-        gate_id = state[0]
-        new_state = {'vehicle_type': 'bike', 'license_plate': 'D1234 ABG'}
-        service.update_state(gate_id, json.dumps(new_state), get_current_datetime())
 
 
 async def scheduler_reset_state():
     while True:
         service.reset_state()
         await asyncio.sleep(int(os.getenv("RESET_STATE_SCHEDULER_TIME", DEFAULT_RESET_STATE_SCHEDULER_TIME)))
+
+
+async def consume_message_queue(app):
+    while True:
+        broker.consume()
+
+
+async def start_background_tasks(app):
+    app['kafka_listener'] = asyncio.create_task(consume_message_queue(app))
+
+
+async def cleanup_background_tasks(app):
+    broker.close_consumer()
+    app['kafka_listener'].cancel()
+    await app['kafka_listener']
 
 
 if __name__ == "__main__":

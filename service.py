@@ -1,13 +1,14 @@
 import logging
 import os
-import sqlite3
 
 import aiohttp
 from aiohttp import web
 
+from database.database import Database, setup_data_state
 from misc.constant.message import *
 from misc.constant.value import *
 from misc.helper.takeruHelper import *
+from broker.broker import Broker
 
 
 def setup_log():
@@ -42,16 +43,9 @@ async def forward(payload):
             logging.error(error)
 
 
-def setup_data_state(**kwargs):
-    status = kwargs.get("status", "Undetected")
-    data = kwargs.get("data", DEFAULT_STATE)
-    return json.dumps({'status': status, 'data': data})
-
-
 class LPRMasterService:
     def __init__(self):
-        db_path = os.path.join(os.getcwd(), os.getenv("DB_NAME", DEFAULT_DB_FILE))
-        self.db_connection = sqlite3.connect(db_path)
+        self.database = Database()
         setup_log()
 
     async def notify(self, request):
@@ -63,52 +57,15 @@ class LPRMasterService:
         for data in payload['data']:
             gate_id = data['gate_id']
             if gate_id:
-                self.check_if_default_state_exist(gate_id)
-                result.append(self.fetch_state(gate_id))
+                self.database.check_if_default_state_exist(gate_id)
+                result.append(self.database.fetch_state(gate_id))
             else:
                 return return_message(message=INVALID_GATE_ID_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
         return return_message(message=result)
 
-    async def test_update_state(self, request):
-        payload = await request.json()
-        updated_state = payload['state']
-        gate_id = payload['gate_id']
-        self.update_state(gate_id, updated_state)
-
-    def add_default_state(self, gate_id):
-        self.db_connection.execute("INSERT INTO state (last_state, gate_id) VALUES (?, ?)",
-                                   (DEFAULT_STATE, gate_id))
-        self.db_connection.commit()
-
-    def check_if_default_state_exist(self, gate_id):
-        cursor = self.db_connection.cursor()
-        cursor.execute("SELECT gate_id FROM state WHERE gate_id = ?", (gate_id,))
-        result = cursor.fetchone()
-        if not result:
-            self.add_default_state(gate_id)
-
-    def update_state(self, gate_id, state, modified):
-        self.db_connection.execute("UPDATE state SET last_state = ?, modified = ? WHERE gate_id = ?",
-                                   (state, modified, gate_id))
-        self.db_connection.commit()
-
-    def fetch_whole_state(self):
-        cursor = self.db_connection.cursor()
-        cursor.execute("SELECT gate_id, modified FROM state")
-        return cursor.fetchall()
-
-    def fetch_state(self, gate_id):
-        cursor = self.db_connection.cursor()
-        cursor.execute("SELECT gate_id, last_state FROM state WHERE gate_id = ?", (gate_id,))
-        result = cursor.fetchone()
-        last_state = json.loads(result[1]) if check_if_string_is_json(result[1]) else result[1]
-        return {
-            'gate_id': result[0],
-            'last_state': last_state
-        }
-
     def reset_state(self):
-        states = self.fetch_whole_state()
+        print('test')
+        states = self.database.fetch_whole_state()
         if states:
             for state in states:
                 gate_id = state[0]
@@ -118,4 +75,4 @@ class LPRMasterService:
                 added_current_dt = add_second_to_datetime(current_dt, int(limit))
                 now = get_current_datetime()
                 if not added_current_dt > now:
-                    self.update_state(gate_id, setup_data_state(), modified)
+                    self.database.update_state(gate_id, setup_data_state(), modified)

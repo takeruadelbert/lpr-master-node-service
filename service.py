@@ -8,7 +8,6 @@ from database.database import Database, setup_data_state
 from misc.constant.message import *
 from misc.constant.value import *
 from misc.helper.takeruHelper import *
-from broker.broker import Broker
 
 
 def setup_log():

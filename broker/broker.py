@@ -19,9 +19,7 @@ class Broker:
         self.database = Database()
 
     def consume(self):
-        print('test1234')
         for message in self.consumer:
-            print('message = ', message)
             data = json.loads(message.value)
             gate_id = data['gate_id']
             lpr_result = data['result']

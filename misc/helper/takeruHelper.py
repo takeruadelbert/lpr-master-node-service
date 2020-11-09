@@ -1,4 +1,5 @@
 import json
+import os
 
 import arrow
 
@@ -27,3 +28,8 @@ def check_if_string_is_json(str_json):
     except ValueError as error:
         return False
     return True
+
+
+def create_log_dir_if_does_not_exists(dirname):
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)

@@ -8,6 +8,7 @@ from aiohttp import web
 
 from broker.broker import Broker
 from misc.constant.value import DEFAULT_PORT, DEFAULT_RESET_STATE_SCHEDULER_TIME, DEFAULT_KAFKA_CONSUME_DELAY_TIME
+from misc.helper.takeruHelper import create_log_dir_if_does_not_exists
 from service import LPRMasterService
 
 logger = logging.getLogger("master-node")
@@ -25,6 +26,7 @@ def setup_log():
     logger.addHandler(handler)
 
 
+create_log_dir_if_does_not_exists('log')
 setup_log()
 service = LPRMasterService(logger)
 broker = Broker()

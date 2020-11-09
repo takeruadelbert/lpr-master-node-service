@@ -2,11 +2,15 @@ import json
 
 import arrow
 
-from misc.constant.value import DEFAULT_DATETIME_FORMAT
+from misc.constant.value import DEFAULT_DATETIME_FORMAT, DEFAULT_DATE_FORMAT
 
 
 def get_current_datetime():
     return arrow.now().format(DEFAULT_DATETIME_FORMAT)
+
+
+def get_current_date():
+    return arrow.now().format(DEFAULT_DATE_FORMAT)
 
 
 def str_to_datetime(str_dt):

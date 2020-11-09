@@ -11,9 +11,10 @@ from misc.helper.takeruHelper import *
 
 
 def setup_log():
+    name = os.getcwd() + '/log/' + DEFAULT_LOG_NAME
     logging.basicConfig(
-        filename=os.getcwd() + '/log/' + DEFAULT_LOG_NAME,
-        level=logging.DEBUG,
+        filename=name,
+        level=logging.ERROR,
         format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
     )
@@ -29,6 +30,7 @@ async def forward(payload):
     forward_url = os.getenv("FORWARD_URL", "")
     if not forward_url:
         logging.error(INVALID_FORWARD_URL_MESSAGE)
+        return return_message(status=HTTP_STATUS_BAD_REQUEST, message=INVALID_FORWARD_URL_MESSAGE)
     else:
         try:
             async with aiohttp.ClientSession() as session:
@@ -36,10 +38,14 @@ async def forward(payload):
                     message = await response.text()
                     if response.status == HTTP_STATUS_OK:
                         logging.info("[{}] {}".format(response.status, message))
+                        return return_message(message=message)
                     else:
                         logging.error("[{}] {}".format(response.status, message))
+                        return return_message(status=response.status, message=message)
         except Exception as error:
             logging.error(error)
+            print(error)
+            return return_message(status=HTTP_STATUS_INTERNAL_SERVER_ERROR, message=error)
 
 
 class LPRMasterService:
@@ -51,19 +57,28 @@ class LPRMasterService:
         payload = await request.json()
         if not payload['data']:
             return return_message(message=INVALID_PAYLOAD_DATA_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
-        await forward(payload)
-        result = []
         for data in payload['data']:
             gate_id = data['gate_id']
             if gate_id:
                 self.database.check_if_default_state_exist(gate_id)
-                result.append(self.database.fetch_state(gate_id))
+        await forward(payload)
+
+    async def get_data_last_state(self, request):
+        payload = await request.json()
+        if not payload['gate_id']:
+            return return_message(status=HTTP_STATUS_BAD_REQUEST, message=INVALID_PAYLOAD_DATA_MESSAGE)
+        result = []
+        for gate_id in payload['gate_id']:
+            if gate_id:
+                if self.database.check_if_default_state_exist(gate_id, False):
+                    result.append(self.database.fetch_state(gate_id))
+                else:
+                    return return_message(status=HTTP_STATUS_NOT_FOUND, message=INVALID_GATE_ID_MESSAGE)
             else:
                 return return_message(message=INVALID_GATE_ID_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
         return return_message(message=result)
 
     def reset_state(self):
-        print('test')
         states = self.database.fetch_whole_state()
         if states:
             for state in states:

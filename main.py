@@ -14,6 +14,7 @@ broker = Broker()
 def setup_route():
     return [
         web.post('/notify', service.notify),
+        web.post('/get-state', service.get_data_last_state)
     ]
 
 

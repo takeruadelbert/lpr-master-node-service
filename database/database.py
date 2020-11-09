@@ -22,12 +22,14 @@ class Database:
                                    (DEFAULT_STATE, gate_id))
         self.db_connection.commit()
 
-    def check_if_default_state_exist(self, gate_id):
+    def check_if_default_state_exist(self, gate_id, auto_add=True):
         cursor = self.db_connection.cursor()
         cursor.execute("SELECT gate_id FROM state WHERE gate_id = ?", (gate_id,))
         result = cursor.fetchone()
-        if not result:
-            self.add_default_state(gate_id)
+        if auto_add:
+            if not result:
+                self.add_default_state(gate_id)
+        return False if not result else True
 
     def update_state(self, gate_id, state, modified):
         self.db_connection.execute("UPDATE state SET last_state = ?, modified = ? WHERE gate_id = ?",

@@ -31,7 +31,7 @@ class LPRMasterService:
                 self.database.check_if_default_state_exist(gate_id)
         response = await self.forward(payload)
         if response:
-            return return_message(message=OK_MESSAGE)
+            return return_message(message=FORWARD_SUCCESS_MESSAGE)
         else:
             return return_message(message=ERROR_FORWARD_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
 
@@ -51,7 +51,7 @@ class LPRMasterService:
             else:
                 self.logger.warning(INVALID_GATE_ID_MESSAGE)
                 return return_message(message=INVALID_GATE_ID_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
-        return return_message(message=OK_MESSAGE)
+        return return_message(message=result)
 
     def reset_state(self):
         states = self.database.fetch_whole_state()

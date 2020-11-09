@@ -16,7 +16,7 @@ logger = logging.getLogger("master-node")
 def setup_log():
     log_format = "%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s"
     log_level = 10
-    handler = TimedRotatingFileHandler("log/my_app.log", when="midnight", interval=1)
+    handler = TimedRotatingFileHandler("log/master-node.log", when="midnight", interval=1)
     handler.setLevel(log_level)
     formatter = logging.Formatter(log_format)
     handler.setFormatter(formatter)

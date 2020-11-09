@@ -1,5 +1,8 @@
 import asyncio
+import logging
 import os
+import re
+from logging.handlers import TimedRotatingFileHandler
 
 from aiohttp import web
 
@@ -7,7 +10,23 @@ from broker.broker import Broker
 from misc.constant.value import DEFAULT_PORT, DEFAULT_RESET_STATE_SCHEDULER_TIME, DEFAULT_KAFKA_CONSUME_DELAY_TIME
 from service import LPRMasterService
 
-service = LPRMasterService()
+logger = logging.getLogger("master-node")
+
+
+def setup_log():
+    log_format = "%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s"
+    log_level = 10
+    handler = TimedRotatingFileHandler("log/my_app.log", when="midnight", interval=1)
+    handler.setLevel(log_level)
+    formatter = logging.Formatter(log_format)
+    handler.setFormatter(formatter)
+    handler.suffix = "%Y%m%d"
+    handler.extMatch = re.compile(r"^\d{8}$")
+    logger.addHandler(handler)
+
+
+setup_log()
+service = LPRMasterService(logger)
 broker = Broker()
 
 

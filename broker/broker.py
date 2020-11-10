@@ -26,7 +26,7 @@ class Broker:
             lpr_result = data['result']
             updated_last_state = setup_data_state(status=STATUS_DETECTED, data=lpr_result)
             self.database.update_state(gate_id, updated_last_state, get_current_datetime())
-            self.logger.info('data last state {} has been updated'.format(gate_id))
+            self.logger.info('data last state {} has been updated : {}'.format(gate_id, lpr_result))
 
     def close_consumer(self):
         self.consumer.close()

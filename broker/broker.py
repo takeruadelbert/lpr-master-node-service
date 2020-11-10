@@ -17,6 +17,7 @@ class Broker:
         self.consumer = KafkaConsumer(consume_topic, bootstrap_servers=bootstrap_server, enable_auto_commit=True,
                                       group_id=consume_topic_group_id, consumer_timeout_ms=1000)
         self.database = Database(logger)
+        self.logger = logger
 
     def consume(self):
         for message in self.consumer:
@@ -25,7 +26,7 @@ class Broker:
             lpr_result = data['result']
             updated_last_state = setup_data_state(status=STATUS_DETECTED, data=lpr_result)
             self.database.update_state(gate_id, updated_last_state, get_current_datetime())
-            print('data last state has been updated')
+            self.logger.info('data last state {} has been updated'.format(gate_id))
 
     def close_consumer(self):
         self.consumer.close()

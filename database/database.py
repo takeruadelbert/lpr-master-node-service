@@ -18,6 +18,7 @@ class Database:
         self.logger = logger
 
     def add_default_state(self, gate_id):
+        self.logger.info('adding {}'.format(gate_id))
         self.db_connection.execute("INSERT INTO state (last_state, gate_id) VALUES (?, ?)",
                                    (DEFAULT_STATE, gate_id))
         self.db_connection.commit()
@@ -30,7 +31,6 @@ class Database:
             if not result:
                 self.add_default_state(gate_id)
                 self.logger.info('{} has been added into database.'.format(gate_id))
-
         return False if not result else True
 
     def update_state(self, gate_id, state, modified):

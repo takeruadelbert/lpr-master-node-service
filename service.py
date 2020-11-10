@@ -37,6 +37,7 @@ class LPRMasterService:
 
     async def get_data_last_state(self, request):
         payload = await request.json()
+        self.logger.info('received data request : {}'.format(payload))
         if not payload['gate_id']:
             self.logger.warning(INVALID_PAYLOAD_DATA_MESSAGE)
             return return_message(status=HTTP_STATUS_BAD_REQUEST, message=INVALID_PAYLOAD_DATA_MESSAGE)
@@ -73,6 +74,7 @@ class LPRMasterService:
             self.logger.warning(INVALID_FORWARD_URL_MESSAGE)
             return return_message(status=HTTP_STATUS_BAD_REQUEST, message=INVALID_FORWARD_URL_MESSAGE)
         else:
+            self.logger.info('forwarding data to stream-to-frame service : {}'.format(payload))
             try:
                 async with aiohttp.ClientSession() as session:
                     async with session.post(forward_url, json=payload) as response:

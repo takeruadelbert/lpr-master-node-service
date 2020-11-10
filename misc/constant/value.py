@@ -1,7 +1,7 @@
 DEFAULT_STATE = "No Vehicle Detected"
 DEFAULT_PORT = 8080
 DEFAULT_DB_FILE = "data-state.sqlite3"
-DEFAULT_LOG_NAME = "master-node.log"
+DEFAULT_APP_NAME = "master-node"
 
 HTTP_STATUS_OK = 200
 HTTP_STATUS_BAD_REQUEST = 400

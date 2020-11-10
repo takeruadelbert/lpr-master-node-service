@@ -7,17 +7,18 @@ from logging.handlers import TimedRotatingFileHandler
 from aiohttp import web
 
 from broker.broker import Broker
-from misc.constant.value import DEFAULT_PORT, DEFAULT_RESET_STATE_SCHEDULER_TIME, DEFAULT_KAFKA_CONSUME_DELAY_TIME
+from misc.constant.value import DEFAULT_PORT, DEFAULT_RESET_STATE_SCHEDULER_TIME, DEFAULT_KAFKA_CONSUME_DELAY_TIME, \
+    DEFAULT_APP_NAME
 from misc.helper.takeruHelper import create_log_dir_if_does_not_exists
 from service import LPRMasterService
 
-logger = logging.getLogger("master-node")
+logger = logging.getLogger(DEFAULT_APP_NAME)
 
 
 def setup_log():
     log_format = "%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s"
     log_level = logging.DEBUG
-    handler = TimedRotatingFileHandler("log/master-node.log", when="midnight", interval=1)
+    handler = TimedRotatingFileHandler("log/{}.log".format(DEFAULT_APP_NAME), when="midnight", interval=1)
     handler.setLevel(log_level)
     formatter = logging.Formatter(log_format)
     handler.setFormatter(formatter)

@@ -15,7 +15,7 @@ def return_message(**kwargs):
 
 class LPRMasterService:
     def __init__(self, logger):
-        self.database = Database()
+        self.database = Database(logger)
         self.logger = logger
 
     async def notify(self, request):
@@ -29,8 +29,10 @@ class LPRMasterService:
                 self.database.check_if_default_state_exist(gate_id)
         response = await self.forward(payload)
         if response:
+            self.logger.info(FORWARD_SUCCESS_MESSAGE)
             return return_message(message=FORWARD_SUCCESS_MESSAGE)
         else:
+            self.logger.error(ERROR_FORWARD_MESSAGE)
             return return_message(message=ERROR_FORWARD_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
 
     async def get_data_last_state(self, request):
@@ -49,6 +51,7 @@ class LPRMasterService:
             else:
                 self.logger.warning(INVALID_GATE_ID_MESSAGE)
                 return return_message(message=INVALID_GATE_ID_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
+        self.logger.info('success fetch data last state.')
         return return_message(message=result)
 
     def reset_state(self):

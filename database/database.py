@@ -13,8 +13,9 @@ def setup_data_state(**kwargs):
 
 
 class Database:
-    def __init__(self):
+    def __init__(self, logger):
         self.db_connection = sqlite3.connect(db_path)
+        self.logger = logger
 
     def add_default_state(self, gate_id):
         self.db_connection.execute("INSERT INTO state (last_state, gate_id) VALUES (?, ?)",
@@ -28,6 +29,8 @@ class Database:
         if auto_add:
             if not result:
                 self.add_default_state(gate_id)
+                self.logger.info('{} has been added into database.'.format(gate_id))
+
         return False if not result else True
 
     def update_state(self, gate_id, state, modified):

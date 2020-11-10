@@ -23,13 +23,14 @@ def setup_log():
     handler.setFormatter(formatter)
     handler.suffix = "%Y%m%d"
     handler.extMatch = re.compile(r"^\d{8}$")
+    logger.setLevel(log_level)
     logger.addHandler(handler)
 
 
 create_log_dir_if_does_not_exists('log')
 setup_log()
 service = LPRMasterService(logger)
-broker = Broker()
+broker = Broker(logger)
 
 
 def setup_route():
@@ -48,12 +49,14 @@ async def initialization():
 
 
 async def scheduler_reset_state():
+    logger.info('starting reset state scheduler ...')
     while True:
         service.reset_state()
         await asyncio.sleep(int(os.getenv("RESET_STATE_SCHEDULER_TIME", DEFAULT_RESET_STATE_SCHEDULER_TIME)))
 
 
 async def consume_message_queue():
+    logger.info('starting broker consumer ...')
     while True:
         broker.consume()
         await asyncio.sleep(DEFAULT_KAFKA_CONSUME_DELAY_TIME)

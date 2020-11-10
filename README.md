@@ -11,7 +11,7 @@ sudo chmod +x run.sh
 and then we install them by running:
 
 ```
-./install-packahge.sh
+./install-package.sh
 ```
 
 Finally, we can run the app by running:

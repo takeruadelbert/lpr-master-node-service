@@ -2,3 +2,4 @@ aiohttp~=3.6.3
 aiojobs~=0.2.2
 arrow~=0.17.0
 kafka-python~=2.0.2
+PyMySQL~=0.10.1

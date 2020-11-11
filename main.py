@@ -28,10 +28,13 @@ def setup_log():
     logger.addHandler(handler)
 
 
-create_log_dir_if_does_not_exists('log')
-setup_log()
-service = LPRMasterService(logger)
-broker = Broker(logger)
+try:
+    create_log_dir_if_does_not_exists('log')
+    setup_log()
+    service = LPRMasterService(logger)
+    broker = Broker(logger)
+except Exception as error:
+    logger.error(error)
 
 
 def setup_route():

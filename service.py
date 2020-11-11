@@ -25,8 +25,9 @@ class LPRMasterService:
             return return_message(message=INVALID_PAYLOAD_DATA_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
         for data in payload['data']:
             gate_id = data['gate_id']
-            if gate_id:
-                self.database.check_if_default_state_exist(gate_id)
+            url_stream = data['url_stream']
+            if gate_id and url_stream:
+                self.database.check_if_default_state_exist(gate_id, url_stream)
         response = await self.forward(payload)
         if response:
             self.logger.info(FORWARD_SUCCESS_MESSAGE)
@@ -47,8 +48,9 @@ class LPRMasterService:
                 if self.database.check_if_default_state_exist(gate_id, False):
                     result.append(self.database.fetch_state(gate_id))
                 else:
-                    self.logger.warning(INVALID_GATE_ID_MESSAGE)
-                    return return_message(status=HTTP_STATUS_NOT_FOUND, message=INVALID_GATE_ID_MESSAGE)
+                    message = "{} : '{}'".format(INVALID_GATE_ID_MESSAGE, gate_id)
+                    self.logger.warning(message)
+                    return return_message(status=HTTP_STATUS_NOT_FOUND, message=message)
             else:
                 self.logger.warning(INVALID_GATE_ID_MESSAGE)
                 return return_message(message=INVALID_GATE_ID_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)

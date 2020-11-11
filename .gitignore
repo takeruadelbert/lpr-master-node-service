@@ -151,5 +151,5 @@ crashlytics-build.properties
 fabric.properties
 
 *.sqlite3
-log/*.log
+log/*
 environment.env

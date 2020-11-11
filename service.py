@@ -1,7 +1,7 @@
 import aiohttp
 from aiohttp import web
 
-from database.database import Database, setup_data_state
+from database.database import setup_data_state
 from misc.constant.message import *
 from misc.constant.value import *
 from misc.helper.takeruHelper import *
@@ -14,8 +14,8 @@ def return_message(**kwargs):
 
 
 class LPRMasterService:
-    def __init__(self, logger):
-        self.database = Database(logger)
+    def __init__(self, logger, database):
+        self.database = database
         self.logger = logger
 
     async def register(self, request):

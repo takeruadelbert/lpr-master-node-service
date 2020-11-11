@@ -7,6 +7,7 @@ from logging.handlers import TimedRotatingFileHandler
 from aiohttp import web
 
 from broker.broker import Broker
+from database.database import Database
 from misc.constant.value import DEFAULT_PORT, DEFAULT_RESET_STATE_SCHEDULER_TIME, DEFAULT_KAFKA_CONSUME_DELAY_TIME, \
     DEFAULT_APP_NAME
 from misc.helper.takeruHelper import create_log_dir_if_does_not_exists
@@ -31,8 +32,9 @@ def setup_log():
 try:
     create_log_dir_if_does_not_exists('log')
     setup_log()
-    service = LPRMasterService(logger)
-    broker = Broker(logger)
+    db = Database(logger)
+    service = LPRMasterService(logger, db)
+    broker = Broker(logger, db)
 except Exception as error:
     logger.error(error)
 

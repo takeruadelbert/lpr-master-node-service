@@ -18,9 +18,10 @@ def setup_data_state(**kwargs):
 class Database:
     def __init__(self, logger):
         try:
-            self.db_connection = pymysql.connect(db_host, db_username, db_password, db_name)
-            self.db_cursor = self.db_connection.cursor()
             self.logger = logger
+            self.db_connection = pymysql.connect(host=db_host, user=db_username, password=db_password, db=db_name,
+                                                 autocommit=True, port=3306)
+            self.db_cursor = self.db_connection.cursor()
         except Exception as error:
             self.logger.error(error)
 

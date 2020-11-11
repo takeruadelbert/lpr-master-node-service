@@ -13,10 +13,10 @@ consume_topic_group_id = os.getenv("KAFKA_CONSUME_TOPIC_GROUP_ID", "lpr-service-
 
 
 class Broker:
-    def __init__(self, logger):
+    def __init__(self, logger, database):
         self.consumer = KafkaConsumer(consume_topic, bootstrap_servers=bootstrap_server, enable_auto_commit=True,
                                       group_id=consume_topic_group_id, consumer_timeout_ms=1000)
-        self.database = Database(logger)
+        self.database = database
         self.logger = logger
 
     def consume(self):

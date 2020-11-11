@@ -5,3 +5,7 @@ OK_MESSAGE = 'OK'
 
 ERROR_FORWARD_MESSAGE = 'an error has occurred. see log for details.'
 FORWARD_SUCCESS_MESSAGE = 'data has been forwarded.'
+REGISTER_SUCCESS = 'successfully registered data stream and gate id'
+MESSAGE_DELETE_GATE_ID_SUCCESS = 'Gate ID has successfully been removed from database'
+MESSAGE_DELETE_GATE_ID_FAILED = 'an error has occurred when removing Gate ID'
+MESSAGE_GATE_ID_NOT_FOUND = 'Data Gate ID does not exists.'

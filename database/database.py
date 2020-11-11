@@ -30,7 +30,7 @@ class Database:
                                (DEFAULT_STATE, gate_id, url))
         self.db_connection.commit()
 
-    def check_if_default_state_exist(self, gate_id, url, auto_add=True):
+    def check_if_default_state_exist(self, gate_id, url=None, auto_add=True):
         self.db_cursor.execute("SELECT gate_id FROM state WHERE gate_id = %s", (gate_id,))
         result = self.db_cursor.fetchone()
         if auto_add:
@@ -56,3 +56,13 @@ class Database:
             'gate_id': result[0],
             'last_state': last_state
         }
+
+    def delete_gate_id(self, gate_id):
+        try:
+            self.db_cursor.execute("DELETE FROM state WHERE gate_id = %s", (gate_id,))
+            self.db_connection.commit()
+            return True
+        except Exception as error:
+            self.db_connection.rollback()
+            self.logger.error(error)
+            return False

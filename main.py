@@ -49,7 +49,6 @@ def setup_route():
 
 async def initialization():
     app = web.Application()
-    asyncio.get_event_loop().create_task(scheduler_reset_state())
     asyncio.get_event_loop().create_task(consume_message_queue())
     app.router.add_routes(setup_route())
     return app

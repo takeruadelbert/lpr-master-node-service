@@ -60,7 +60,7 @@ class LPRMasterService:
         result = []
         for gate_id in payload['gate_id']:
             if gate_id:
-                if self.database.check_if_default_state_exist(gate_id, False):
+                if self.database.check_if_default_state_exist(gate_id, None, False):
                     result.append(self.database.fetch_state(gate_id))
                 else:
                     message = "{} : '{}'".format(INVALID_GATE_ID_MESSAGE, gate_id)

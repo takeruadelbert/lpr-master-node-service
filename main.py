@@ -33,8 +33,9 @@ try:
     create_log_dir_if_does_not_exists('log')
     setup_log()
     db = Database(logger)
+    db2 = Database(logger)
     service = LPRMasterService(logger, db)
-    broker = Broker(logger, db)
+    broker = Broker(logger, db2)
 except Exception as error:
     logger.error(error)
 

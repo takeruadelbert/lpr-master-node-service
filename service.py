@@ -8,7 +8,7 @@ from misc.helper.takeruHelper import *
 
 
 def return_message(**kwargs):
-    message = kwargs.get("message", "")
+    message = kwargs.get("message", OK_MESSAGE)
     status = kwargs.get("status", HTTP_STATUS_OK)
     data = kwargs.get("data", [])
     return web.json_response({'message': message, 'data': data}, status=status)
@@ -119,3 +119,15 @@ class LPRMasterService:
             except Exception as error:
                 self.logger.error(error)
                 return return_message(status=HTTP_STATUS_UNPROCESSABLE_ENTITY, message=ERROR_FORWARD_MESSAGE)
+
+    async def get_data_image_result_by_ticket_number(self, request):
+        payload = await request.json()
+        ticket_number = payload['ticket_number']
+        if not ticket_number:
+            self.logger.warning(INVALID_TICKET_NUMBER_MESSAGE)
+            return return_message(status=HTTP_STATUS_BAD_REQUEST, message=INVALID_TICKET_NUMBER_MESSAGE)
+        data = self.database.fetch_data_image_result_by_ticket_number(ticket_number)
+        if data:
+            return return_message(data=data)
+        else:
+            return return_message(status=HTTP_STATUS_BAD_REQUEST, message=MESSAGE_TICKET_NUMBER_NOT_FOUND)

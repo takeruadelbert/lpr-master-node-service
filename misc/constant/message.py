@@ -3,6 +3,8 @@ INVALID_GATE_ID_MESSAGE = 'Invalid Gate ID'
 INVALID_FORWARD_URL_MESSAGE = 'Invalid Forward URL'
 INVALID_FILENAME_MESSAGE = 'Invalid Filename Image'
 INVALID_DATA_IMAGE_MESSAGE = 'Invalid encoded data image'
+INVALID_TICKET_NUMBER_MESSAGE = 'Invalid ticket number'
+
 OK_MESSAGE = 'OK'
 
 ERROR_FORWARD_MESSAGE = 'an error has occurred. see log for details.'
@@ -11,3 +13,4 @@ REGISTER_SUCCESS = 'successfully registered data stream and gate id'
 MESSAGE_DELETE_GATE_ID_SUCCESS = 'Gate ID has successfully been removed from database'
 MESSAGE_DELETE_GATE_ID_FAILED = 'an error has occurred when removing Gate ID'
 MESSAGE_GATE_ID_NOT_FOUND = 'Data Gate ID does not exists.'
+MESSAGE_TICKET_NUMBER_NOT_FOUND = 'Ticket Number Not Found'

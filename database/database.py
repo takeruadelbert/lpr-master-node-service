@@ -67,3 +67,22 @@ class Database:
             self.db_connection.rollback()
             self.logger.error(error)
             return False
+
+    def update_data_image_result(self, result, token):
+        self.db_cursor.execute("UPDATE image_result SET result = %s, token = %s, status = %s",
+                               (result, token, STATUS_DONE))
+        self.db_connection.commit()
+
+    def fetch_data_image_result_by_ticket_number(self, ticket_number):
+        self.db_cursor.execute("SELECT ticket_number, result, token, status FROM image_result WHERE ticket_number = %s",
+                               (ticket_number,))
+        result = self.db_cursor.fetchone()
+        if result:
+            return {
+                'ticket_number': result[0],
+                'result': result[1],
+                'token': result[2],
+                'status': result[3]
+            }
+        else:
+            return None

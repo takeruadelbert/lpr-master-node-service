@@ -18,3 +18,4 @@ DEFAULT_PREFIX_BASE64 = 'data:image/jpeg;base64,'
 
 STATUS_DETECTED = "detected"
 STATUS_UNDETECTED = "undetected"
+STATUS_DONE = "DONE"

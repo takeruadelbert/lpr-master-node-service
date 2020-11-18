@@ -67,3 +67,21 @@ class Database:
             self.db_connection.rollback()
             self.logger.error(error)
             return False
+
+    def add_default_image_result_data(self):
+        try:
+            ticket = str(get_current_timestamp_ms())
+            self.db_cursor.execute("INSERT INTO image_result (ticket_number, status) VALUES (%s, %s)",
+                                   (ticket, STATUS_PROCESSING))
+            self.db_connection.commit()
+            self.logger.info("Success added default data image result with ticket number : {}".format(ticket))
+            return {
+                'has_error': False,
+                'ticket_number': ticket
+            }
+        except Exception as error:
+            self.logger.error("Error has occurred when adding default data image result : {}".format(error))
+            return {
+                'has_error': True,
+                'error_message': error
+            }

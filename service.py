@@ -85,22 +85,42 @@ class LPRMasterService:
                 if not added_current_dt > now:
                     self.database.update_state(gate_id, setup_data_state(), modified)
 
-    async def forward(self, payload):
+    async def forward(self, request):
         forward_url = os.getenv("FORWARD_URL", "")
         if not forward_url:
             self.logger.warning(INVALID_FORWARD_URL_MESSAGE)
             return return_message(status=HTTP_STATUS_BAD_REQUEST, message=INVALID_FORWARD_URL_MESSAGE)
         else:
-            self.logger.info('forwarding data to stream-to-frame service : {}'.format(payload))
+            payload = await request.json()
+            if not payload['filename']:
+                self.logger.warning(INVALID_FILENAME_MESSAGE)
+                return return_message(status=HTTP_STATUS_BAD_REQUEST, message=INVALID_FILENAME_MESSAGE)
+            encoded_image = payload['encoded_file']
+            if not encoded_image:
+                self.logger.warning(INVALID_DATA_IMAGE_MESSAGE)
+                return return_message(status=HTTP_STATUS_BAD_REQUEST, message=INVALID_DATA_IMAGE_MESSAGE)
+            if DEFAULT_PREFIX_BASE64 not in encoded_image:
+                payload['encoded_file'] = '{}{}'.format(DEFAULT_PREFIX_BASE64, encoded_image)
+            self.logger.info('forwarding data to process service : {}'.format(payload))
             try:
                 async with aiohttp.ClientSession() as session:
                     async with session.post(forward_url, json=payload) as response:
                         message = await response.text()
                         if response.status == HTTP_STATUS_OK:
                             self.logger.info("[{}] {}".format(response.status, message))
-                            return message
+                            result = self.database.add_default_image_result_data()
+                            if not result['has_error']:
+                                data = {
+                                    'message': OK_MESSAGE,
+                                    'ticket_number': result['ticket_number']
+                                }
+                                return return_message(message=data)
+                            else:
+                                return return_message(status=HTTP_STATUS_UNPROCESSABLE_ENTITY,
+                                                      message=result['error_message'])
                         else:
                             self.logger.warning("[{}] {}".format(response.status, message))
-                            return message
+                            return return_message(status=response.status, message=message)
             except Exception as error:
                 self.logger.error(error)
+                return return_message(status=HTTP_STATUS_UNPROCESSABLE_ENTITY, message=ERROR_FORWARD_MESSAGE)

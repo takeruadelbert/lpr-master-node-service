@@ -1,5 +1,6 @@
 import json
 import os
+import time
 
 import arrow
 
@@ -33,3 +34,7 @@ def check_if_string_is_json(str_json):
 def create_log_dir_if_does_not_exists(dirname):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
+
+
+def get_current_timestamp_ms():
+    return int(round(time.time() * 1000))

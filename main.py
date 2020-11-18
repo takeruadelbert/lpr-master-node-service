@@ -44,7 +44,8 @@ def setup_route():
     return [
         web.post('/register', service.register),
         web.post('/get-state', service.get_data_last_state),
-        web.delete('/gate', service.delete_gate_id)
+        web.delete('/gate', service.delete_gate_id),
+        web.post('/notify', service.forward)
     ]
 
 

@@ -8,7 +8,7 @@ from aiohttp import web
 
 from broker.broker import Broker
 from database.database import Database
-from misc.constant.value import DEFAULT_PORT, DEFAULT_RESET_STATE_SCHEDULER_TIME, DEFAULT_KAFKA_CONSUME_DELAY_TIME, \
+from misc.constant.value import DEFAULT_PORT, DEFAULT_KAFKA_CONSUME_DELAY_TIME, \
     DEFAULT_APP_NAME
 from misc.helper.takeruHelper import create_log_dir_if_does_not_exists
 from service import LPRMasterService
@@ -53,21 +53,22 @@ def setup_route():
 async def initialization():
     app = web.Application()
     asyncio.get_event_loop().create_task(consume_message_queue())
+    asyncio.get_event_loop().create_task(consume_image_result())
     app.router.add_routes(setup_route())
     return app
-
-
-async def scheduler_reset_state():
-    logger.info('starting reset state scheduler ...')
-    while True:
-        service.reset_state()
-        await asyncio.sleep(int(os.getenv("RESET_STATE_SCHEDULER_TIME", DEFAULT_RESET_STATE_SCHEDULER_TIME)))
 
 
 async def consume_message_queue():
     logger.info('starting broker consumer ...')
     while True:
         broker.consume()
+        await asyncio.sleep(DEFAULT_KAFKA_CONSUME_DELAY_TIME)
+
+
+async def consume_image_result():
+    logger.info('starting broker consumer LPR Image Result ...')
+    while True:
+        broker.consume_image_result()
         await asyncio.sleep(DEFAULT_KAFKA_CONSUME_DELAY_TIME)
 
 

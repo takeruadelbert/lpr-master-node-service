@@ -24,6 +24,8 @@ def add_second_to_datetime(dt, second):
 
 def check_if_string_is_json(str_json):
     try:
+        if not str_json:
+            return False
         json.loads(str_json)
     except ValueError as error:
         return False

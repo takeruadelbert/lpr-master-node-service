@@ -68,9 +68,9 @@ class Database:
             self.logger.error(error)
             return False
 
-    def update_data_image_result(self, result, token):
-        self.db_cursor.execute("UPDATE image_result SET result = %s, token = %s, status = %s",
-                               (result, token, STATUS_DONE))
+    def update_data_image_result(self, result, token, ticket_number):
+        self.db_cursor.execute("UPDATE image_result SET result = %s, token = %s, status = %s WHERE ticker_number = %s",
+                               (result, token, STATUS_DONE, ticket_number))
         self.db_connection.commit()
 
     def fetch_data_image_result_by_ticket_number(self, ticket_number):
@@ -80,7 +80,7 @@ class Database:
         if result:
             return {
                 'ticket_number': result[0],
-                'result': result[1],
+                'result': json.loads(result[1]) if check_if_string_is_json(result[1]) else result[1],
                 'token': result[2],
                 'status': result[3]
             }

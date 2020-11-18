@@ -10,7 +10,8 @@ from misc.helper.takeruHelper import *
 def return_message(**kwargs):
     message = kwargs.get("message", "")
     status = kwargs.get("status", HTTP_STATUS_OK)
-    return web.json_response({'message': message}, status=status)
+    data = kwargs.get("data", [])
+    return web.json_response({'message': message, 'data': data}, status=status)
 
 
 class LPRMasterService:
@@ -105,19 +106,13 @@ class LPRMasterService:
             try:
                 async with aiohttp.ClientSession() as session:
                     async with session.post(forward_url, json=payload) as response:
-                        message = await response.text()
+                        temp_response = await response.text()
+                        temp = json.loads(temp_response)
+                        message = temp['message']
+                        data = temp['data']
                         if response.status == HTTP_STATUS_OK:
                             self.logger.info("[{}] {}".format(response.status, message))
-                            result = self.database.add_default_image_result_data()
-                            if not result['has_error']:
-                                data = {
-                                    'message': OK_MESSAGE,
-                                    'ticket_number': result['ticket_number']
-                                }
-                                return return_message(message=data)
-                            else:
-                                return return_message(status=HTTP_STATUS_UNPROCESSABLE_ENTITY,
-                                                      message=result['error_message'])
+                            return return_message(message=message, data=data)
                         else:
                             self.logger.warning("[{}] {}".format(response.status, message))
                             return return_message(status=response.status, message=message)

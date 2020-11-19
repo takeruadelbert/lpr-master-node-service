@@ -44,13 +44,11 @@ class LPRMasterService:
                 return return_message(message=message)
             else:
                 message = '{} {}'.format(MESSAGE_DELETE_GATE_ID_FAILED, gate_id)
-                return return_message(status=HTTP_STATUS_UNPROCESSABLE_ENTITY,
-                                      message=message)
+                return return_message(status=HTTP_STATUS_UNPROCESSABLE_ENTITY, message=message)
         else:
             message = '{} : {}'.format(MESSAGE_GATE_ID_NOT_FOUND, gate_id)
             self.logger.warning(message)
-            return return_message(status=HTTP_STATUS_NOT_FOUND,
-                                  message=message)
+            return return_message(status=HTTP_STATUS_NOT_FOUND, message=message)
 
     async def get_data_last_state(self, request):
         payload = await request.json()
@@ -71,7 +69,7 @@ class LPRMasterService:
                 self.logger.warning(INVALID_GATE_ID_MESSAGE)
                 return return_message(message=INVALID_GATE_ID_MESSAGE, status=HTTP_STATUS_BAD_REQUEST)
         self.logger.info('success fetch data last state.')
-        return return_message(message=result)
+        return return_message(message=OK_MESSAGE, data=result)
 
     def reset_state(self):
         states = self.database.fetch_whole_state()

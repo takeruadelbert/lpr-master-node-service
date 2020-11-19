@@ -45,7 +45,7 @@ def setup_route():
         web.post('/register', service.register),
         web.post('/get-state', service.get_data_last_state),
         web.delete('/gate', service.delete_gate_id),
-        web.post('/notify', service.forward),
+        web.post('/encoded-upload', service.forward_encoded_image),
         web.post('/lpr-result', service.get_data_image_result_by_ticket_number)
     ]
 
@@ -53,7 +53,6 @@ def setup_route():
 async def initialization():
     app = web.Application()
     asyncio.get_event_loop().create_task(consume_message_queue())
-    # asyncio.get_event_loop().create_task(consume_image_result())
     app.router.add_routes(setup_route())
     return app
 
@@ -63,13 +62,6 @@ async def consume_message_queue():
     while True:
         broker.consume()
         await asyncio.sleep(DEFAULT_KAFKA_CONSUME_DELAY_TIME)
-
-
-# async def consume_image_result():
-#     logger.info('starting broker consumer LPR Image Result ...')
-#     while True:
-#         broker.consume_image_result()
-#         await asyncio.sleep(DEFAULT_KAFKA_CONSUME_DELAY_TIME)
 
 
 if __name__ == "__main__":

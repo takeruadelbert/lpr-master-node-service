@@ -69,7 +69,7 @@ class Database:
             return False
 
     def update_data_image_result(self, result, token, ticket_number):
-        self.db_cursor.execute("UPDATE image_result SET result = %s, token = %s, status = %s WHERE ticker_number = %s",
+        self.db_cursor.execute("UPDATE image_result SET result = %s, token = %s, status = %s WHERE ticket_number = %s",
                                (result, token, STATUS_DONE, ticket_number))
         self.db_connection.commit()
 

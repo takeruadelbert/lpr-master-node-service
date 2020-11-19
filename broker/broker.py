@@ -16,32 +16,34 @@ consume_topic_image_result_group_id = os.getenv("KAFKA_CONSUME_TOPIC_IMAGE_RESUL
 
 class Broker:
     def __init__(self, logger, database):
-        self.consumer = KafkaConsumer(consume_topic, bootstrap_servers=bootstrap_server, enable_auto_commit=True,
+        self.consumer = KafkaConsumer(bootstrap_servers=bootstrap_server, enable_auto_commit=True,
                                       group_id=consume_topic_group_id, consumer_timeout_ms=1000)
-        self.image_result_consumer = KafkaConsumer(consume_topic_image_result, bootstrap_servers=bootstrap_server,
-                                                   enable_auto_commit=True, consumer_timeout_ms=1000,
-                                                   group_id=consume_topic_image_result_group_id)
+        self.consumer.subscribe([consume_topic, consume_topic_image_result])
         self.database = database
         self.logger = logger
 
     def consume(self):
         for message in self.consumer:
             data = json.loads(message.value)
-            gate_id = data['gate_id']
-            lpr_result = data['result']
-            updated_last_state = setup_data_state(status=STATUS_DETECTED, data=lpr_result)
-            self.database.update_state(gate_id, updated_last_state, get_current_datetime())
-            self.logger.info('data last state {} has been updated : {}'.format(gate_id, lpr_result))
-
-    def consume_image_result(self):
-        for message in self.image_result_consumer:
-            data = json.loads(message.value)
-            ticket_number = data['ticket_number']
-            lpr_result = data['result']
-            lpr_result_in_string = json.dumps(lpr_result)
-            token = lpr_result['token']
-            self.database.update_data_image_result(lpr_result_in_string, token, ticket_number)
-            self.logger.info("data image result for ticket number '{}' has been updated.".format(ticket_number))
+            if message.topic == consume_topic:
+                self.process_lpr_frame_result(data)
+            else:
+                self.process_lpr_image_result(data)
 
     def close_consumer(self):
         self.consumer.close()
+
+    def process_lpr_frame_result(self, data):
+        gate_id = data['gate_id']
+        lpr_result = data['result']
+        updated_last_state = setup_data_state(status=STATUS_DETECTED, data=lpr_result)
+        self.database.update_state(gate_id, updated_last_state, get_current_datetime())
+        self.logger.info('data last state {} has been updated : {}'.format(gate_id, lpr_result))
+
+    def process_lpr_image_result(self, data):
+        ticket_number = data['ticket_number']
+        lpr_result = data['result']
+        lpr_result_in_string = json.dumps(lpr_result)
+        token = lpr_result['token']
+        self.database.update_data_image_result(lpr_result_in_string, token, ticket_number)
+        self.logger.info("data image result for ticket number '{}' has been updated.".format(ticket_number))

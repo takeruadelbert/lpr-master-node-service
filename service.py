@@ -100,7 +100,7 @@ class LPRMasterService:
 
     async def forward_url_image(self, request):
         try:
-            payload = await request.post()
+            payload = await request.json()
             if payload:
                 self.logger.info('forwarding data to process service : {}'.format(payload))
                 forward_url = os.getenv("FORWARD_URL_UPLOAD_VIA_URL")

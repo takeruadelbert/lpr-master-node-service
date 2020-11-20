@@ -47,6 +47,7 @@ def setup_route():
         web.delete('/gate', service.delete_gate_id),
         web.post('/upload-encoded', service.forward_encoded_image),
         web.post('/upload', service.forward_raw_image),
+        web.post('/upload-url', service.forward_url_image),
         web.post('/lpr-result', service.get_data_image_result_by_ticket_number)
     ]
 

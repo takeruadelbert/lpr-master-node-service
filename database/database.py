@@ -95,6 +95,7 @@ class Database:
             )
             self.db_connection.commit()
             self.logger.info("data image result for ticket number '{}' has been updated.".format(ticket_number))
+            self.update_ticket_number_status(ticket_number)
 
     def get_data_lpr_output_by_lpr_input_id(self, lpr_input_id):
         self.db_cursor.execute("SELECT * FROM lpr_output WHERE lpr_input_id = %s", (lpr_input_id,))
@@ -124,3 +125,9 @@ class Database:
                 return None
         else:
             return None
+
+    def update_ticket_number_status(self, ticket_number):
+        self.db_cursor.execute("UPDATE lpr_input SET status = %s WHERE ticket_number = %s",
+                               (STATUS_DONE, ticket_number))
+        self.db_connection.commit()
+        self.logger.info("status has been updated for ticket number {}".format(ticket_number))

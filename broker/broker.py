@@ -43,8 +43,6 @@ class Broker:
     def process_lpr_image_result(self, data):
         ticket_number = data['ticket_number']
         lpr_result = data['result']
-        lpr_result_in_string = json.dumps(lpr_result)
         token = lpr_result['token']
-        self.database.update_data_image_result(lpr_result_in_string, token, ticket_number)
-        self.logger.info("data image result for ticket number '{}' has been updated.".format(ticket_number))
+        self.database.update_data_image_result(lpr_result, token, ticket_number)
         self.consumer.commit()

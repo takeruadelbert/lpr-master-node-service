@@ -68,21 +68,59 @@ class Database:
             self.logger.error(error)
             return False
 
-    def update_data_image_result(self, result, token, ticket_number):
-        self.db_cursor.execute("UPDATE image_result SET result = %s, token = %s, status = %s WHERE ticket_number = %s",
-                               (result, token, STATUS_DONE, ticket_number))
-        self.db_connection.commit()
-
-    def fetch_data_image_result_by_ticket_number(self, ticket_number):
-        self.db_cursor.execute("SELECT ticket_number, result, token, status FROM image_result WHERE ticket_number = %s",
-                               (ticket_number,))
+    def get_data_lpr_input_by_ticket_number(self, ticket_number):
+        self.db_cursor.execute("SELECT * FROM lpr_input WHERE ticket_number = %s", (ticket_number,))
         result = self.db_cursor.fetchone()
         if result:
             return {
-                'ticket_number': result[0],
-                'result': json.loads(result[1]) if check_if_string_is_json(result[1]) else result[1],
-                'token': result[2],
-                'status': result[3]
+                'id': result[0],
+                'ticket_number': result[1],
+                'status': result[2],
+                'token': result[3],
+                'created': result[4]
             }
+        else:
+            return None
+
+    def update_data_image_result(self, result, token, ticket_number):
+        data_lpr_input = self.get_data_lpr_input_by_ticket_number(ticket_number)
+        vehicle_type = result['type']
+        license_plate_number = result['license_plate_number']
+        created = get_current_datetime()
+        if data_lpr_input:
+            lpr_input_id = data_lpr_input['id']
+            self.db_cursor.execute(
+                "INSERT INTO lpr_output (lpr_input_id, vehicle_type, license_plate_number, token, created) VALUES ("
+                "%s, %s, %s, %s, %s)", (lpr_input_id, vehicle_type, license_plate_number, token, created)
+            )
+            self.db_connection.commit()
+            self.logger.info("data image result for ticket number '{}' has been updated.".format(ticket_number))
+
+    def get_data_lpr_output_by_lpr_input_id(self, lpr_input_id):
+        self.db_cursor.execute("SELECT * FROM lpr_output WHERE lpr_input_id = %s", (lpr_input_id,))
+        result = self.db_cursor.fetchone()
+        if result:
+            return {
+                'id': result[0],
+                'lpr_input_id': result[1],
+                'vehicle_type': result[2],
+                'license_plate_number': result[3],
+                'token': result[4],
+                'created': result[5]
+            }
+        else:
+            return None
+
+    def fetch_data_image_result_by_ticket_number(self, ticket_number):
+        data_lpr_input = self.get_data_lpr_input_by_ticket_number(ticket_number)
+        if data_lpr_input:
+            data_lpr_output = self.get_data_lpr_output_by_lpr_input_id(data_lpr_input['id'])
+            if data_lpr_output:
+                return {
+                    'input': data_lpr_input,
+                    'output': data_lpr_output
+                }
+            else:
+                return None
         else:
             return None

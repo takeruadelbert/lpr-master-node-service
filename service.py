@@ -1,12 +1,10 @@
 import aiohttp
-from aiohttp import web
+from aiohttp import web, FormData
 
 from database.database import setup_data_state
 from misc.constant.message import *
 from misc.constant.value import *
 from misc.helper.takeruHelper import *
-
-forward_url = os.getenv("FORWARD_URL", "")
 
 
 def return_message(**kwargs):
@@ -86,6 +84,34 @@ class LPRMasterService:
                 if not added_current_dt > now:
                     self.database.update_state(gate_id, setup_data_state(), modified)
 
+    async def forward_raw_image(self, request):
+        try:
+            payload = await request.post()
+            if payload:
+                self.logger.info('forwarding data to process service : {}'.format(payload))
+                forward_url = os.getenv("FORWARD_URL_UPLOAD_RAW")
+                return await self.forward_form_data(forward_url, payload)
+            else:
+                self.logger.warning(INVALID_DATA_IMAGE_MESSAGE)
+                return return_message(status=HTTP_STATUS_BAD_REQUEST, message=INVALID_DATA_IMAGE_MESSAGE)
+        except Exception as error:
+            self.logger.error(error)
+            return return_message(status=HTTP_STATUS_UNPROCESSABLE_ENTITY, message=error)
+
+    async def forward_url_image(self, request):
+        try:
+            payload = await request.post()
+            if payload:
+                self.logger.info('forwarding data to process service : {}'.format(payload))
+                forward_url = os.getenv("FORWARD_URL_UPLOAD_VIA_URL")
+                return await self.forward(forward_url, payload)
+            else:
+                self.logger.warning(INVALID_DATA_IMAGE_MESSAGE)
+                return return_message(status=HTTP_STATUS_BAD_REQUEST, message=INVALID_DATA_IMAGE_MESSAGE)
+        except Exception as error:
+            self.logger.error(error)
+            return return_message(status=HTTP_STATUS_UNPROCESSABLE_ENTITY, message=error)
+
     async def forward_encoded_image(self, request):
         try:
             payload = await request.json()
@@ -96,31 +122,50 @@ class LPRMasterService:
             if not encoded_image:
                 self.logger.warning(INVALID_DATA_IMAGE_MESSAGE)
                 return return_message(status=HTTP_STATUS_BAD_REQUEST, message=INVALID_DATA_IMAGE_MESSAGE)
-            if DEFAULT_PREFIX_BASE64 not in encoded_image:
-                payload['encoded_file'] = '{}{}'.format(DEFAULT_PREFIX_BASE64, encoded_image)
+            forward_url = os.getenv("FORWARD_URL_UPLOAD_BASE64")
             self.logger.info('forwarding data to process service : {}'.format(payload))
-            return await self.forward(payload)
+            return await self.forward(forward_url, payload)
         except Exception as error:
             self.logger.error(error)
             return return_message(status=HTTP_STATUS_UNPROCESSABLE_ENTITY, message=error)
 
-    async def forward(self, payload):
+    async def forward(self, forward_url, payload):
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(forward_url, json=payload) as response:
-                    temp_response = await response.text()
-                    temp = json.loads(temp_response)
-                    message = temp['message']
-                    data = temp['data']
-                    if response.status == HTTP_STATUS_OK:
-                        self.logger.info("[{}] {}".format(response.status, message))
-                        return return_message(message=message, data=data)
-                    else:
-                        self.logger.warning("[{}] {}".format(response.status, message))
-                        return return_message(status=response.status, message=message)
+                    return await self.process_response(response)
         except Exception as error:
             self.logger.error(error)
             return return_message(status=HTTP_STATUS_UNPROCESSABLE_ENTITY, message=ERROR_FORWARD_MESSAGE)
+
+    async def forward_form_data(self, forward_url, payload):
+        try:
+            temp = payload['files']
+            file = temp.file
+            filename = temp.filename
+            content_type = temp.content_type
+            name = temp.name
+
+            data = FormData()
+            data.add_field(name, file, filename=filename, content_type=content_type)
+            async with aiohttp.ClientSession() as session:
+                async with session.post(forward_url, data=data) as response:
+                    return await self.process_response(response)
+        except Exception as error:
+            self.logger.error(error)
+            return return_message(status=HTTP_STATUS_UNPROCESSABLE_ENTITY, message=ERROR_FORWARD_MESSAGE)
+
+    async def process_response(self, response):
+        temp_response = await response.text()
+        temp = json.loads(temp_response)
+        message = temp['message']
+        data = temp['data']
+        if response.status == HTTP_STATUS_OK:
+            self.logger.info("[{}] {}".format(response.status, message))
+            return return_message(message=message, data=data)
+        else:
+            self.logger.warning("[{}] {}".format(response.status, message))
+            return return_message(status=response.status, message=message)
 
     async def get_data_image_result_by_ticket_number(self, request):
         payload = await request.json()

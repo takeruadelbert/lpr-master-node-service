@@ -77,7 +77,7 @@ class Database:
                 'ticket_number': result[1],
                 'status': result[2],
                 'token': result[3],
-                'created': result[4]
+                'created': str(result[4])
             }
         else:
             return None
@@ -106,7 +106,7 @@ class Database:
                 'vehicle_type': result[2],
                 'license_plate_number': result[3],
                 'token': result[4],
-                'created': result[5]
+                'created': str(result[5])
             }
         else:
             return None

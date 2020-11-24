@@ -132,11 +132,12 @@ class Database:
         self.db_connection.commit()
         self.logger.info("status has been updated for ticket number {}".format(ticket_number))
 
-    def get_data_lpr_frame_input_by_gate(self, gate_id):
+    def get_data_lpr_frame_input_by_gate(self, gate_id, token_input):
         data_state = self.get_data_state_by_gate(gate_id)
         if data_state:
             state_id = data_state['id']
-            self.db_cursor.execute("SELECT id, state_id, token FROM lpr_frame_input WHERE state_id = %s", (state_id,))
+            self.db_cursor.execute("SELECT id, state_id, token FROM lpr_frame_input WHERE state_id = %s AND token = %s",
+                                   (state_id, token_input))
             result = self.db_cursor.fetchone()
             if result:
                 return {
@@ -162,9 +163,10 @@ class Database:
         else:
             return None
 
-    def check_if_lpr_frame_output_duplicate(self, state_id, license_plate_number):
-        self.db_cursor.execute("SELECT id FROM lpr_frame_output WHERE state_id = %s AND license_plate_number = %s",
-                               (state_id, license_plate_number))
+    def check_if_lpr_frame_output_duplicate(self, lpr_frame_input_id, license_plate_number):
+        self.db_cursor.execute(
+            "SELECT id FROM lpr_frame_output WHERE lpr_frame_input_id = %s AND license_plate_number = %s",
+            (lpr_frame_input_id, license_plate_number))
         result = self.db_cursor.fetchone()
         return True if result else False
 
@@ -174,12 +176,14 @@ class Database:
         license_plate_number = kwargs.get("license_plate_number")
         token = kwargs.get("token", None)
         created = get_current_datetime()
-        self.db_cursor.execute(
-            "INSERT INTO lpr_frame_output (lpr_frame_input_id, vehicle_type, licesen_plate_number, token, created",
-            (lpr_frame_input_id, vehicle_type, license_plate_number, token, created)
-        )
-        self.db_connection.commit()
-        self.logger.info("successfully inserted new data to 'lpr_frame_output' table.")
+        if not self.check_if_lpr_frame_output_duplicate(lpr_frame_input_id, license_plate_number):
+            self.db_cursor.execute(
+                "INSERT INTO lpr_frame_output (lpr_frame_input_id, vehicle_type, license_plate_number, token, created) "
+                "VALUES (%s, %s, %s, %s ,%s)",
+                (lpr_frame_input_id, vehicle_type, license_plate_number, token, created)
+            )
+            self.db_connection.commit()
+            self.logger.info("successfully inserted new data to 'lpr_frame_output' table.")
 
     def get_state_id_by_gate(self, gate_id):
         self.db_cursor.execute("SELECT id, gate_id FROM state WHERE gate_id = %s", (gate_id,))

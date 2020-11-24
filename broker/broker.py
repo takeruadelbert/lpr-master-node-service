@@ -4,7 +4,7 @@ import os
 from kafka import KafkaConsumer
 
 from database.database import setup_data_state
-from misc.constant.value import STATUS_DETECTED, STATUS_UNDETECTED
+from misc.constant.value import STATUS_DETECTED, STATUS_UNDETECTED, STATUS_UNKNOWN
 from misc.helper.takeruHelper import get_current_datetime
 
 bootstrap_server = "{}:{}".format(os.getenv("KAFKA_HOST"), os.getenv("KAFKA_PORT"))
@@ -49,17 +49,16 @@ class Broker:
         self.database.update_data_image_result(lpr_result, token, ticket_number)
         self.consumer.commit()
 
-    def add_frame_output(self, gate_id, str_lpr_result, token_input):
-        data_lpr_frame_input = self.database.get_data_lpr_frame_input_by_gate(gate_id)
-        if data_lpr_frame_input:
-            lpr_frame_input_id = data_lpr_frame_input['id']
-            data_lpr = json.loads(str_lpr_result)
-            vehicle_type = data_lpr['type']
-            license_plate_number = data_lpr['license_plate_number']
-            if license_plate_number != STATUS_UNDETECTED:
-                token = data_lpr['token']
-                state_id = self.database.get_state_id_by_gate(gate_id)
-                self.database.add_data_lpr_frame_input(state_id, token_input)
+    def add_frame_output(self, gate_id, lpr_result, token_input):
+        vehicle_type = lpr_result['type']
+        license_plate_number = lpr_result['license_plate_number']
+        if vehicle_type != STATUS_UNKNOWN and license_plate_number != STATUS_UNDETECTED:
+            token = lpr_result['token']
+            state_id = self.database.get_state_id_by_gate(gate_id)
+            self.database.add_data_lpr_frame_input(state_id, token_input)
+            data_lpr_frame_input = self.database.get_data_lpr_frame_input_by_gate(gate_id, token_input)
+            if data_lpr_frame_input:
+                lpr_frame_input_id = data_lpr_frame_input['id']
                 self.database.add_data_lpr_frame_output(lpr_frame_input_id=lpr_frame_input_id,
                                                         vehicle_type=vehicle_type,
                                                         license_plate_number=license_plate_number, token=token)

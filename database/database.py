@@ -27,8 +27,8 @@ class Database:
 
     def add_default_state(self, gate_id, url):
         self.logger.info('adding {}'.format(gate_id))
-        self.db_cursor.execute("INSERT INTO state (last_state, gate_id, url) VALUES (%s, %s, %s)",
-                               (DEFAULT_STATE, gate_id, url))
+        self.db_cursor.execute("INSERT INTO state (last_state, gate_id, url, status) VALUES (%s, %s, %s, %s)",
+                               (DEFAULT_STATE, gate_id, url, STATUS_RUNNING))
         self.db_connection.commit()
 
     def check_if_default_state_exist(self, gate_id, url=None, auto_add=True):
@@ -60,7 +60,7 @@ class Database:
 
     def delete_gate_id(self, gate_id):
         try:
-            self.db_cursor.execute("DELETE FROM state WHERE gate_id = %s", (gate_id,))
+            self.db_cursor.execute("UPDATE state set status = %s WHERE gate_id = %s", (STATUS_STOPPED, gate_id))
             self.db_connection.commit()
             return True
         except Exception as error:

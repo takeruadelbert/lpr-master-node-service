@@ -40,10 +40,10 @@ class LPRMasterService:
         gate_id = payload['gate_id']
         if self.database.check_if_default_state_exist(gate_id, None, False):
             if self.database.delete_gate_id(gate_id):
-                message = '{} {}'.format(MESSAGE_DELETE_GATE_ID_SUCCESS, gate_id)
+                message = '{}: {}'.format(MESSAGE_REVOKE_GATE_ID_SUCCESS, gate_id)
                 return return_message(message=message)
             else:
-                message = '{} {}'.format(MESSAGE_DELETE_GATE_ID_FAILED, gate_id)
+                message = '{}: {}'.format(MESSAGE_REVOKE_GATE_ID_FAILED, gate_id)
                 return return_message(status=HTTP_STATUS_UNPROCESSABLE_ENTITY, message=message)
         else:
             message = '{} : {}'.format(MESSAGE_GATE_ID_NOT_FOUND, gate_id)

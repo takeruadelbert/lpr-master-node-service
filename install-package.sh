@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 virtualenv venv -q -p /usr/bin/python3.8
 source venv/bin/activate

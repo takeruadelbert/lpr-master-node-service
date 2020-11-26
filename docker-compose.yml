@@ -2,6 +2,7 @@ version: '2.4'
 services:
   lpr_master_node:
     container_name: master_node
+    image: takeruadelbert/lpr-master-node
     command: ./run.sh -m http.server 7070
     ports:
       - 7070:7070

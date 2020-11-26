@@ -30,6 +30,7 @@ class Database:
         self.db_cursor.execute("INSERT INTO state (last_state, gate_id, url, status) VALUES (%s, %s, %s, %s)",
                                (DEFAULT_STATE, gate_id, url, STATUS_RUNNING))
         self.db_connection.commit()
+        self.logger.info('{} has been added into database.'.format(gate_id))
 
     def check_if_default_state_exist(self, gate_id, url=None, auto_add=True):
         self.db_cursor.execute("SELECT gate_id FROM state WHERE gate_id = %s", (gate_id,))
@@ -37,13 +38,19 @@ class Database:
         if auto_add:
             if not result:
                 self.add_default_state(gate_id, url)
-                self.logger.info('{} has been added into database.'.format(gate_id))
+            else:
+                self.update_state_status(STATUS_RUNNING, gate_id)
         return False if not result else True
 
     def update_state(self, gate_id, state, modified):
         self.db_cursor.execute("UPDATE state SET last_state = %s, modified = %s WHERE gate_id = %s",
                                (state, modified, gate_id))
         self.db_connection.commit()
+
+    def update_state_status(self, status, gate_id):
+        self.db_cursor.execute("UPDATE state SET status = %s WHERE gate_id = %s", (status, gate_id))
+        self.db_connection.commit()
+        self.logger.info('{} status has been updated to {}.'.format(gate_id, status))
 
     def fetch_whole_state(self):
         self.db_cursor.execute("SELECT gate_id, modified FROM state")
